@@ -14,6 +14,7 @@ import pytest
 from jsonschema import validators
 
 from .baselines import load_baseline
+from .rejections import defined_at, main_rejection
 
 TESTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TESTS_DIR.parent
@@ -52,7 +53,7 @@ def _samples():
         for path in sorted(data_dir.rglob("*.jsonld")):
             rel = path.relative_to(data_dir).as_posix()
             marks = [pytest.mark.xfail(strict=True, reason="known divergence from W3C schema")] if rel in known else []
-            params.append(pytest.param(path, golden_path, id=f"{version}/{rel}", marks=marks))
+            params.append(pytest.param(path, golden_path, rel in known, id=f"{version}/{rel}", marks=marks))
     return params
 
 
@@ -75,11 +76,26 @@ def golden_validators():
     return get
 
 
-@pytest.mark.parametrize("td_path, golden_path", _samples())
-def test_generated_agrees_with_ground_truth(generated_validator, golden_validators, td_path: Path, golden_path: Path):
+@pytest.mark.parametrize("td_path, golden_path, baselined", _samples())
+def test_generated_agrees_with_ground_truth(
+    generated_validator, golden_validators, new_failures, td_path: Path, golden_path: Path, baselined
+):
     instance = json.loads(td_path.read_text(encoding="utf-8"))
-    generated = _accepts(generated_validator, instance)
+    gen_errors = list(generated_validator.iter_errors(instance))
+    generated = not gen_errors
     golden = _accepts(golden_validators(golden_path), instance)
+    if generated != golden and not baselined:
+        sample = td_path.relative_to(TESTS_DIR / "data").as_posix()
+        if golden:
+            where, spath, msg = main_rejection(gen_errors)
+            src = defined_at(spath)
+            schema_where = f"{spath}, defined at {src}" if src else spath
+            new_failures.append(
+                f"crosscheck {sample}: generated rejects, W3C accepts: "
+                f"at {where} (schema: {schema_where}): {msg}"
+            )
+        else:
+            new_failures.append(f"crosscheck {sample}: generated accepts, W3C rejects")
     assert generated == golden, (
         f"verdict mismatch on {td_path.name}: "
         f"generated={'accept' if generated else 'reject'}, golden={'accept' if golden else 'reject'}"

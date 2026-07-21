@@ -16,6 +16,7 @@ from jsonschema import validators
 from jsonschema.exceptions import best_match
 
 from .baselines import load_baseline
+from .rejections import defined_at, main_rejection, rejection_details
 
 TESTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TESTS_DIR.parent
@@ -46,19 +47,30 @@ def _samples():
         for path in sorted(data_dir.rglob("*.jsonld")):
             rel = path.relative_to(data_dir).as_posix()
             marks = [pytest.mark.xfail(strict=True, reason="known fidelity gap")] if rel in known_failures else []
-            params.append(pytest.param(path, id=f"{version}/{rel}", marks=marks))
+            params.append(pytest.param(path, rel in known_failures, id=f"{version}/{rel}", marks=marks))
     return params
 
 
-@pytest.mark.parametrize("td_path", _samples())
-def test_td_instance(validator, td_path: Path):
+@pytest.mark.parametrize("td_path, baselined", _samples())
+def test_td_instance(validator, rejections, new_failures, td_path: Path, baselined):
     expected_valid = "invalid" not in td_path.name.lower()
     instance = json.loads(td_path.read_text(encoding="utf-8"))
-    error = best_match(validator.iter_errors(instance))
+    errors = list(validator.iter_errors(instance))
     if expected_valid:
+        sample = td_path.relative_to(TESTS_DIR / "data").as_posix()
+        version = sample.split("/", 1)[0]
+        for _, spath, msg in rejection_details(errors):
+            entry = rejections.setdefault((version, spath), {"count": 0, "example": msg})
+            entry["count"] += 1
+        if errors and not baselined:
+            where, spath, msg = main_rejection(errors)
+            src = defined_at(spath)
+            schema_where = f"{spath}, defined at {src}" if src else spath
+            new_failures.append(f"gate {sample}: at {where} (schema: {schema_where}): {msg}")
+        error = best_match(errors)
         assert error is None, f"expected VALID but schema rejected {td_path.name}: {error and error.message}"
     else:
-        assert error is not None, f"expected INVALID but schema accepted {td_path.name}"
+        assert errors, f"expected INVALID but schema accepted {td_path.name}"
 
 
 def _baselines():
