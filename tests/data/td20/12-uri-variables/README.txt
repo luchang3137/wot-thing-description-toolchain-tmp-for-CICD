@@ -1,1 +1,0 @@
-This category contains examples demonstrating use of URI variables in Thing Descriptions.

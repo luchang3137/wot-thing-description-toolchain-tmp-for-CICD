@@ -1,1 +1,0 @@
-This category contains examples demonstrating various meta interactions that can be used in Thing Descriptions, such as readallproperties, writeallproperties, etc.

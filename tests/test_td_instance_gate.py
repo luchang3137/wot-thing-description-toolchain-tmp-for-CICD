@@ -1,10 +1,11 @@
 """TD-instance gate.
 
 The generated JSON Schema must accept every ``*-valid`` sample and reject every
-``*-invalid`` one, for both TD 1.1 and TD 2.0. Valid samples the schema wrongly
-rejects (known fidelity gaps) are listed in the per-version known-failures files
-and marked xfail(strict): a fix that makes one pass forces removing it there, so
-the list can only shrink.
+``*-invalid`` one, for both TD 1.1 and TD 2.0. The samples on disk are the TD 1.1
+ones; the TD 2.0 variant is derived per test by rewriting @context (as_td20 in
+baselines.py). Valid samples the schema wrongly rejects (known fidelity gaps) are
+listed in the known-failures file and marked xfail(strict): a fix that makes one
+pass forces removing it there, so the list can only shrink.
 """
 from __future__ import annotations
 
@@ -15,17 +16,14 @@ import pytest
 from jsonschema import validators
 from jsonschema.exceptions import best_match
 
-from .baselines import load_baseline
+from .baselines import TD_VERSIONS, as_td20, load_baseline
 from .rejections import defined_at, main_rejection, rejection_details
 
 TESTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TESTS_DIR.parent
 SCHEMA_PATH = REPO_ROOT / "resources" / "gens" / "jsonschema" / "jsonschema.json"
-
-TD_VERSIONS = [
-    ("td11", TESTS_DIR / "data" / "td11", TESTS_DIR / "td_gate_known_failures_td11.txt"),
-    ("td20", TESTS_DIR / "data" / "td20", TESTS_DIR / "td_gate_known_failures_td20.txt"),
-]
+DATA_DIR = TESTS_DIR / "data"
+KNOWN_FAILURES = TESTS_DIR / "td_gate_known_failures.txt"
 
 
 @pytest.fixture(scope="session")
@@ -40,25 +38,24 @@ def validator():
 
 def _samples():
     params = []
-    for version, data_dir, failures_file in TD_VERSIONS:
-        if not data_dir.exists():
-            continue
-        known_failures = load_baseline(failures_file)
-        for path in sorted(data_dir.rglob("*.jsonld")):
-            rel = path.relative_to(data_dir).as_posix()
-            marks = [pytest.mark.xfail(strict=True, reason="known fidelity gap")] if rel in known_failures else []
-            params.append(pytest.param(path, rel in known_failures, id=f"{version}/{rel}", marks=marks))
+    known_failures = load_baseline(KNOWN_FAILURES)
+    for version in TD_VERSIONS:
+        for path in sorted(DATA_DIR.rglob("*.jsonld")):
+            sample = f"{version}/{path.relative_to(DATA_DIR).as_posix()}"
+            marks = [pytest.mark.xfail(strict=True, reason="known fidelity gap")] if sample in known_failures else []
+            params.append(pytest.param(path, version, sample in known_failures, id=sample, marks=marks))
     return params
 
 
-@pytest.mark.parametrize("td_path, baselined", _samples())
-def test_td_instance(validator, rejections, new_failures, td_path: Path, baselined):
+@pytest.mark.parametrize("td_path, version, baselined", _samples())
+def test_td_instance(validator, rejections, new_failures, td_path: Path, version: str, baselined):
     expected_valid = "invalid" not in td_path.name.lower()
     instance = json.loads(td_path.read_text(encoding="utf-8"))
+    if version == "td20":
+        instance = as_td20(instance)
     errors = list(validator.iter_errors(instance))
     if expected_valid:
-        sample = td_path.relative_to(TESTS_DIR / "data").as_posix()
-        version = sample.split("/", 1)[0]
+        sample = f"{version}/{td_path.relative_to(DATA_DIR).as_posix()}"
         for _, spath, msg in rejection_details(errors):
             entry = rejections.setdefault((version, spath), {"count": 0, "example": msg})
             entry["count"] += 1
@@ -73,22 +70,16 @@ def test_td_instance(validator, rejections, new_failures, td_path: Path, baselin
         assert errors, f"expected INVALID but schema accepted {td_path.name}"
 
 
-def _baselines():
-    params = []
-    for version, data_dir, failures_file in TD_VERSIONS:
-        entries = load_baseline(failures_file)
-        if entries:
-            params.append(pytest.param(data_dir, entries, id=version))
-    return params
-
-
-@pytest.mark.parametrize("data_dir, known_failures", _baselines())
-def test_known_failures_are_valid_samples(data_dir: Path, known_failures):
+def test_known_failures_are_valid_samples():
+    known_failures = load_baseline(KNOWN_FAILURES)
     bad = sorted(p for p in known_failures if "invalid" in Path(p).name.lower())
     assert not bad, f"known-failures must list only valid samples, found: {bad}"
 
 
-@pytest.mark.parametrize("data_dir, known_failures", _baselines())
-def test_known_failures_paths_exist(data_dir: Path, known_failures):
-    missing = sorted(p for p in known_failures if not (data_dir / p).exists())
-    assert not missing, f"known-failures entries no longer exist: {missing}"
+def test_known_failures_entries_resolve():
+    known_failures = load_baseline(KNOWN_FAILURES)
+    missing = sorted(
+        p for p in known_failures
+        if p.split("/", 1)[0] not in TD_VERSIONS or not (DATA_DIR / p.split("/", 1)[1]).exists()
+    )
+    assert not missing, f"known-failures entries do not match <version>/<existing sample>: {missing}"

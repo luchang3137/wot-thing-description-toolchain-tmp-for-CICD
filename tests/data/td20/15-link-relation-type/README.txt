@@ -1,1 +1,0 @@
-This category contains examples demonstrating use of relation links between individual, and/or collections of, Thing Descriptions.

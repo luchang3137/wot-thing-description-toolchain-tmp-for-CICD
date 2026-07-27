@@ -1,1 +1,0 @@
-This category contains examples demonstrating use of additional non-standard metadata to personalize or adapt a Thing Description to a specific situation or application.
