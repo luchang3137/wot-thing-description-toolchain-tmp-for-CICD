@@ -17,7 +17,6 @@ validate: false
     "properties": {
         "dimming": {
             "tm:ref": "http://example.com/SmartLampControlwithDimming.tm.jsonld#/properties/dim",
-            "title": null,
             "maximum": 80,
             "unit": "%"
         }
