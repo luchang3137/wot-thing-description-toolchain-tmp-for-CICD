@@ -112,8 +112,6 @@ def process_fragments(
             ["bikeshed", "spec", str(bs_path), str(html_path), "--force"],
             capture_output=True,
             text=True,
-            encoding="utf-8",
-            errors="replace",
             timeout=120,
         )
 

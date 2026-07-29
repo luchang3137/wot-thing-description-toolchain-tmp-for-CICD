@@ -3,9 +3,6 @@
 layout: pre
 id: td-model-example-tmRef2
 title: Smart Lamp Control extend and overwrite existing definitions
-# this example uses "title": null (tm:ref removal), which the TM
-# validation schema cannot express, so skip validation
-validate: false
 ---
 */
 {
