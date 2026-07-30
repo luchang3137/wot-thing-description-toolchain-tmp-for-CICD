@@ -27,7 +27,8 @@ def _run_linkml_generator(schema_view: SchemaView, generator: str, output_dir: P
     if generator == 'jsonschema':
         logging.info("Proceeding with LinkML to JSON Schema conversion")
         json_schema_generator = JsonSchemaGenerator(schema_view.schema, mergeimports=True)
-        processed_content = json_schema_generator.serialize()
+        # serialize() returns a JSON string; parse it so we write an object, not a quoted string.
+        processed_content = json.loads(json_schema_generator.serialize())
         output_file = output_dir / 'jsonschema.json'
         with output_file.open('w', encoding='utf-8') as f:
             json.dump(processed_content, f, indent=2, ensure_ascii=False)
