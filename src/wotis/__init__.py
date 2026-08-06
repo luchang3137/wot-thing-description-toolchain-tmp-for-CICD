@@ -10,7 +10,6 @@ ASSERTION_PATH = GENS_PATH / 'assertions' / 'assertions.csv'
 
 CONFIG = Config.from_resources_dir(RESOURCES_PATH, placeholder="%s")
 
-MANUAL_PATH = RESOURCES_PATH / 'benchmark_schemas'
 YAML_SCHEMA_PATH = SCHEMA_PATH / 'thing_description.yaml'
 GENERATED_LINKML_SCHEMA = GENS_PATH / 'linkml/linkml.yaml'
 RESPEC_TEMPLATE_PATH = RESOURCES_PATH / 'index.template.html'
