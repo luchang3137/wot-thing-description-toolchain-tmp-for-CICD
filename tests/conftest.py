@@ -9,7 +9,7 @@ from .baselines import load_baseline
 from .rejections import defined_at
 
 TESTS_DIR = Path(__file__).resolve().parent
-SPEC_STRUCTURE_BASELINE = TESTS_DIR / "spec_structure_known_failures.txt"
+SPEC_STRUCTURE_BASELINE = TESTS_DIR / "known_failures" / "spec_structure.txt"
 
 
 def pytest_addoption(parser):
