@@ -17,6 +17,4 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Check upstream files
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: python3 .github/scripts/check_upstream_sources.py
