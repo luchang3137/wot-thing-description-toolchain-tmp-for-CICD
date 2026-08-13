@@ -7,6 +7,10 @@ RESOURCES_PATH = Path('resources')
 SCHEMA_PATH = RESOURCES_PATH / 'schemas'
 GENS_PATH = RESOURCES_PATH / 'gens'
 ASSERTION_PATH = GENS_PATH / 'assertions' / 'assertions.csv'
+# Copied from w3c/wot-thing-description testing/inputs/. Holds the assertions
+# that the spec text does not state as a separate sentence but the test suite
+# still needs, same as in the upstream toolchain.
+EXTRA_ASSERTS_PATH = RESOURCES_PATH / 'upstream' / 'extra-asserts.html'
 
 CONFIG = Config.from_resources_dir(RESOURCES_PATH, placeholder="%s")
 
@@ -28,5 +32,5 @@ __all__ = [
     "JINJA_TEMPLATE_DIR", "GLOSSARY_PATH", "SNIPPETS_DIR",
     "CORE_SCHEMA_PLACEHOLDER", "YAML_SCHEMA_PATH",
     "GENERATED_LINKML_SCHEMA", "RESPEC_TEMPLATE_PATH", "FINAL_SPEC_PATH",
-    "GENERATORS", "ASSERTION_PATH",
+    "GENERATORS", "ASSERTION_PATH", "EXTRA_ASSERTS_PATH",
 ]

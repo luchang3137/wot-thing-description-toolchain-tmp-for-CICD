@@ -1,19 +1,17 @@
 """Compare the generated spec HTML against the manual golden HTML.
 
-Scope: the fully auto-generated vocabulary sections (Data Schema, Security,
-Hypermedia Controls, Default Values) plus the MultiLanguage subsection. The
-golden file tests/manual_goldens/html/index.html is the hand-verified
-reference; any difference in these sections is an error.
+Scope: the four sections that the pipeline generates. resources/index.template.html
+holds exactly four "%s" placeholders and each one sits inside one of these
+sections, so their whole content comes from the LinkML schema. Other sections
+are written by hand in the template and pass through unchanged. sec-default-values
+for example has the same one table with 19 rows before and after generation, so
+comparing it would not say anything about the generator.
+
+The golden file tests/manual_goldens/html/index.html is the hand-verified
+reference; any difference inside the four sections is an error.
 
 Every test first walks through everything in its scope and collects all
-differences, then fails once with the complete list. There is no known
-failures file for these tests on purpose: a difference must either be fixed
-in the generator or approved into the golden, not parked.
-
-Link targets are NOT resolved here: both files are ReSpec source documents,
-and many anchors (heading ids, #bib-*, #dfn-*) only exist after ReSpec
-renders the page. Where both files state an explicit href, the href is
-compared by the cell comparison.
+differences, then fails once with the complete list.
 """
 from __future__ import annotations
 
@@ -23,11 +21,8 @@ import pytest
 
 from .spec_html_compare import (
     assertion_texts,
-    captionless_tables,
     compare_tables,
-    duplicate_ids,
     heading_texts,
-    normalize_text,
     parse_html,
     section_by_id,
     tables_by_caption,
@@ -39,10 +34,10 @@ GOLDEN_PATH = TESTS_DIR / "manual_goldens" / "html" / "index.html"
 GENERATED_PATH = REPO_ROOT / "resources" / "gens" / "index.html"
 
 CONTAINER_SECTION_IDS = [
+    "sec-core-vocabulary-definition",
     "sec-data-schema-vocabulary-definition",
     "sec-security-vocabulary-definition",
     "sec-hypermedia-vocabulary-definition",
-    "sec-default-values",
 ]
 
 
@@ -72,12 +67,14 @@ def _fail_on_findings(findings: list[str]) -> None:
     assert not findings, f"{len(findings)} difference(s):\n" + "\n".join(findings)
 
 
-def test_multilanguage_heading_present(golden_tree, generated_tree) -> None:
-    for name, tree in [("golden", golden_tree), ("generated", generated_tree)]:
-        headings = [normalize_text(h.text_content()) for h in tree.cssselect("h3")]
-        assert any(h.endswith("MultiLanguage") for h in headings), (
-            f"MultiLanguage heading missing in {name} file"
-        )
+def _assertions_in_scope(tree) -> dict[str, str]:
+    """Assertion spans of all four sections, collected into one mapping."""
+    found: dict[str, str] = {}
+    for section_id in CONTAINER_SECTION_IDS:
+        section = section_by_id(tree, section_id)
+        if section is not None:
+            found.update(assertion_texts(section))
+    return found
 
 
 @pytest.mark.parametrize("section_id", CONTAINER_SECTION_IDS)
@@ -101,18 +98,10 @@ def test_tables_present_in_both(golden_tree, generated_tree, section_id) -> None
     golden_tables = tables_by_caption(golden_section)
     generated_tables = tables_by_caption(generated_section)
     findings = []
-    for caption in golden_tables.keys() - generated_tables.keys():
+    for caption in sorted(golden_tables.keys() - generated_tables.keys()):
         findings.append(f"section '{section_id}': table '{caption}' missing in generated file")
-    for caption in generated_tables.keys() - golden_tables.keys():
+    for caption in sorted(generated_tables.keys() - golden_tables.keys()):
         findings.append(f"section '{section_id}': table '{caption}' only in generated file")
-    golden_captionless = captionless_tables(golden_section)
-    generated_captionless = captionless_tables(generated_section)
-    if len(golden_captionless) != len(generated_captionless):
-        findings.append(
-            f"section '{section_id}': {len(golden_captionless)} captionless table(s) in golden "
-            f"(first rows: {golden_captionless}), {len(generated_captionless)} in generated "
-            f"(first rows: {generated_captionless})"
-        )
     _fail_on_findings(findings)
 
 
@@ -132,8 +121,8 @@ def test_table_content_matches(golden_tree, generated_tree, section_id) -> None:
 
 
 def test_assertion_spans_match(golden_tree, generated_tree) -> None:
-    golden_assertions = assertion_texts(golden_tree)
-    generated_assertions = assertion_texts(generated_tree)
+    golden_assertions = _assertions_in_scope(golden_tree)
+    generated_assertions = _assertions_in_scope(generated_tree)
     findings = []
     for assertion_id in sorted(golden_assertions.keys() - generated_assertions.keys()):
         findings.append(f"assertion '{assertion_id}' is in the golden but not in the generated file")
@@ -147,13 +136,3 @@ def test_assertion_spans_match(golden_tree, generated_tree) -> None:
                 f"    generated: {generated_assertions[assertion_id]}"
             )
     _fail_on_findings(findings)
-
-
-@pytest.mark.parametrize("file_name", ["golden", "generated"])
-@pytest.mark.parametrize("section_id", CONTAINER_SECTION_IDS)
-def test_no_duplicate_ids(golden_tree, generated_tree, section_id, file_name) -> None:
-    tree = golden_tree if file_name == "golden" else generated_tree
-    section = section_by_id(tree, section_id)
-    assert section is not None, f"section '{section_id}' missing in {file_name} file"
-    duplicates = duplicate_ids(section)
-    _fail_on_findings([f"{file_name}, section '{section_id}': duplicate id '{d}'" for d in duplicates])

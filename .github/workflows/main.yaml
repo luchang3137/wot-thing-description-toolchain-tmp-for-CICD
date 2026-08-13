@@ -107,6 +107,9 @@ jobs:
       - name: Spec HTML vs manual golden
         run: uv run pytest tests/test_spec_html_vs_golden.py -v
 
+      - name: Assertion inventory vs upstream
+        run: uv run pytest tests/test_assertion_inventory.py -v
+
   golden-diff:
     name: Golden diff
     needs: build
