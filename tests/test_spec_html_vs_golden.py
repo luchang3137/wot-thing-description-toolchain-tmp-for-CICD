@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from .spec_html_compare import (
+    GENERATED_SECTION_IDS,
     assertion_texts,
     compare_tables,
     heading_texts,
@@ -32,14 +33,6 @@ TESTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TESTS_DIR.parent
 GOLDEN_PATH = TESTS_DIR / "manual_goldens" / "html" / "index.html"
 GENERATED_PATH = REPO_ROOT / "resources" / "gens" / "index.html"
-
-CONTAINER_SECTION_IDS = [
-    "sec-core-vocabulary-definition",
-    "sec-data-schema-vocabulary-definition",
-    "sec-security-vocabulary-definition",
-    "sec-hypermedia-vocabulary-definition",
-]
-
 
 @pytest.fixture(scope="module")
 def golden_tree():
@@ -63,22 +56,28 @@ def _sections_or_fail(golden_tree, generated_tree, section_id):
     return golden_section, generated_section
 
 
-def _fail_on_findings(findings: list[str]) -> None:
-    assert not findings, f"{len(findings)} difference(s):\n" + "\n".join(findings)
+def _fail_on_findings(spec_html_findings: list[str], findings: list[str]) -> None:
+    """Hand the differences to the report in conftest.py, then fail.
+
+    The detail goes into the report, not into the assertion message, otherwise
+    every failing section prints its own wall of text.
+    """
+    spec_html_findings.extend(findings)
+    assert not findings, f"{len(findings)} difference(s), see the report at the end of the run"
 
 
 def _assertions_in_scope(tree) -> dict[str, str]:
     """Assertion spans of all four sections, collected into one mapping."""
     found: dict[str, str] = {}
-    for section_id in CONTAINER_SECTION_IDS:
+    for section_id in GENERATED_SECTION_IDS:
         section = section_by_id(tree, section_id)
         if section is not None:
             found.update(assertion_texts(section))
     return found
 
 
-@pytest.mark.parametrize("section_id", CONTAINER_SECTION_IDS)
-def test_section_headings_match(golden_tree, generated_tree, section_id) -> None:
+@pytest.mark.parametrize("section_id", GENERATED_SECTION_IDS)
+def test_section_headings_match(golden_tree, generated_tree, spec_html_findings, section_id) -> None:
     golden_section, generated_section = _sections_or_fail(golden_tree, generated_tree, section_id)
     golden_headings = heading_texts(golden_section)
     generated_headings = heading_texts(generated_section)
@@ -89,11 +88,11 @@ def test_section_headings_match(golden_tree, generated_tree, section_id) -> None
             f"    golden:    {golden_headings}\n"
             f"    generated: {generated_headings}"
         )
-    _fail_on_findings(findings)
+    _fail_on_findings(spec_html_findings, findings)
 
 
-@pytest.mark.parametrize("section_id", CONTAINER_SECTION_IDS)
-def test_tables_present_in_both(golden_tree, generated_tree, section_id) -> None:
+@pytest.mark.parametrize("section_id", GENERATED_SECTION_IDS)
+def test_tables_present_in_both(golden_tree, generated_tree, spec_html_findings, section_id) -> None:
     golden_section, generated_section = _sections_or_fail(golden_tree, generated_tree, section_id)
     golden_tables = tables_by_caption(golden_section)
     generated_tables = tables_by_caption(generated_section)
@@ -102,11 +101,11 @@ def test_tables_present_in_both(golden_tree, generated_tree, section_id) -> None
         findings.append(f"section '{section_id}': table '{caption}' missing in generated file")
     for caption in sorted(generated_tables.keys() - golden_tables.keys()):
         findings.append(f"section '{section_id}': table '{caption}' only in generated file")
-    _fail_on_findings(findings)
+    _fail_on_findings(spec_html_findings, findings)
 
 
-@pytest.mark.parametrize("section_id", CONTAINER_SECTION_IDS)
-def test_table_content_matches(golden_tree, generated_tree, section_id) -> None:
+@pytest.mark.parametrize("section_id", GENERATED_SECTION_IDS)
+def test_table_content_matches(golden_tree, generated_tree, spec_html_findings, section_id) -> None:
     golden_section, generated_section = _sections_or_fail(golden_tree, generated_tree, section_id)
     golden_tables = tables_by_caption(golden_section)
     generated_tables = tables_by_caption(generated_section)
@@ -115,12 +114,16 @@ def test_table_content_matches(golden_tree, generated_tree, section_id) -> None:
         if caption not in generated_tables:
             continue  # reported by test_tables_present_in_both
         findings.extend(
-            compare_tables(f"table '{caption}'", golden_tables[caption], generated_tables[caption])
+            compare_tables(
+                f"section '{section_id}', table '{caption}'",
+                golden_tables[caption],
+                generated_tables[caption],
+            )
         )
-    _fail_on_findings(findings)
+    _fail_on_findings(spec_html_findings, findings)
 
 
-def test_assertion_spans_match(golden_tree, generated_tree) -> None:
+def test_assertion_spans_match(golden_tree, generated_tree, spec_html_findings) -> None:
     golden_assertions = _assertions_in_scope(golden_tree)
     generated_assertions = _assertions_in_scope(generated_tree)
     findings = []
@@ -135,4 +138,4 @@ def test_assertion_spans_match(golden_tree, generated_tree) -> None:
                 f"    golden:    {golden_assertions[assertion_id]}\n"
                 f"    generated: {generated_assertions[assertion_id]}"
             )
-    _fail_on_findings(findings)
+    _fail_on_findings(spec_html_findings, findings)

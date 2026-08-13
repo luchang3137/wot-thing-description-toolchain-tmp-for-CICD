@@ -13,7 +13,7 @@ uv run pytest tests/ -v
 |---|---|
 | `test_td_instance_gate.py` | Does the generated JSON Schema accept every valid sample in `data/` and reject every invalid one? |
 | `test_td_crosscheck.py` | Does the generated JSON Schema give the same verdict as the W3C schemas in `resources/ground-truth-schemas/`? |
-| `test_golden_diff.py` | Did the generated JSON Schema or JSON-LD context change without us noticing? Compares with the snapshots in `goldens/`. |
+| `test_golden_diff.py` | Did the generated JSON Schema, JSON-LD context or the four generated spec sections change without us noticing? Compares with the snapshots in `goldens/`. |
 | `test_spec_html_vs_golden.py` | Does the generated spec HTML match `manual_goldens/html/index.html` inside the four sections the pipeline generates? |
 | `test_assertion_inventory.py` | Does our assertion id set match the upstream one in `resources/upstream/assertions.csv`? Reports only, never fails. |
 | `test_golden_form_structure.py` | Does the Form section of the generated HTML have the expected structure? |

@@ -217,7 +217,7 @@ When reviewing HTML changes, do not evaluate the entire document — scope the c
 | `static-analysis` | Ruff lint; LinkML schema lint (non-blocking) |
 | `build` | Full artifact generation; all output files non-empty; package builds |
 | `test-gates` | TD instance gate; W3C cross-check; HTML structure tests; generated spec HTML vs manual golden; assertion inventory vs upstream |
-| `golden-diff` | Generated JSON Schema + context vs committed snapshots |
+| `golden-diff` | Generated JSON Schema + context + the four generated spec sections vs committed snapshots |
 
 `upstream-sync-check.yaml` runs on its own, every Monday and on demand. It
 checks that the files listed in `resources/upstream-copies.txt` are still

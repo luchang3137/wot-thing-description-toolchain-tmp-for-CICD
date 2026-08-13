@@ -18,12 +18,41 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import lxml.etree
 import lxml.html
 from lxml.html import HtmlElement
+
+# The sections the pipeline generates: resources/index.template.html holds
+# exactly four "%s" placeholders and each one sits inside one of these.
+GENERATED_SECTION_IDS = [
+    "sec-core-vocabulary-definition",
+    "sec-data-schema-vocabulary-definition",
+    "sec-security-vocabulary-definition",
+    "sec-hypermedia-vocabulary-definition",
+]
 
 
 def parse_html(path: Path) -> HtmlElement:
     return lxml.html.parse(str(path)).getroot()
+
+
+def generated_sections_html(path: Path) -> str:
+    """The four generated sections, serialized the same way every run.
+
+    Used as the snapshot in test_golden_diff.py. Only the four sections are
+    taken, so hand-written parts of the template do not end up in the snapshot.
+    """
+    tree = parse_html(path)
+    parts = []
+    for section_id in GENERATED_SECTION_IDS:
+        section = section_by_id(tree, section_id)
+        if section is None:
+            parts.append(f"<!-- section {section_id} is missing -->\n")
+            continue
+        parts.append(lxml.etree.tostring(section, pretty_print=True, encoding="unicode"))
+    # The template contains carriage returns and lxml writes them out as &#13;,
+    # which only makes the snapshot diff harder to read.
+    return "".join(parts).replace("&#13;", "")
 
 
 def normalize_text(text: str | None) -> str:
