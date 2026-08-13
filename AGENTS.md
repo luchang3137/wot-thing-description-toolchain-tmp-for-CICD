@@ -118,11 +118,15 @@ uv run wotis generate-wot-resources -d 2>&1 | grep -E "ERROR|WARNING"
 # All tests (on main branch)
 uv run pytest tests/ -v
 
-# Spec HTML structure tests (exist on main)
+# Spec HTML structure tests
 uv run pytest tests/test_spec_content_rendering.py tests/test_golden_form_structure.py -v
-```
 
-**Note:** `test_td_instance_gate.py`, `test_golden_diff.py`, and `td_gate_known_failures_*.txt` do not exist on `main` yet — they are added by PR #63. Once merged, the full test command set expands.
+# Generated spec HTML vs the manual golden
+uv run pytest tests/test_spec_html_vs_golden.py -v
+
+# Assertion inventory vs upstream
+uv run pytest tests/test_assertion_inventory.py -v
+```
 
 ### Test Suite State on `main`
 
@@ -150,7 +154,16 @@ The pipeline aborts on any snippet validation ERROR. Fix before declaring the ch
 
 ### Known-Failures Baseline
 
-Valid TD instances that the generated JSON Schema currently rejects (known fidelity gaps) are tracked in baseline files added by PR #63. Rules (apply once those files exist on `main`):
+Everything that currently fails on purpose is listed under `tests/known_failures/`:
+
+| File | Used by |
+|---|---|
+| `td_gate.txt` | `test_td_instance_gate.py` |
+| `td_crosscheck.txt` | `test_td_crosscheck.py` |
+| `spec_structure.txt` | `test_golden_form_structure.py`, via `conftest.py` |
+
+This directory is transitional. Every list must shrink to empty, then the
+directory is deleted. Rules:
 - List only valid TD files (`*-valid.jsonld`), never invalid ones.
 - Each entry must correspond to a tracked issue.
 - Fixing a gap removes its entry — the list can only shrink.
@@ -197,14 +210,18 @@ When reviewing HTML changes, do not evaluate the entire document — scope the c
 
 ### CI Pipeline (GitHub Actions)
 
-Four jobs in sequence: `static-analysis` → `build` → [`test-gates` ∥ `golden-diff`].
+`main.yaml` runs four jobs in sequence: `static-analysis` → `build` → [`test-gates` ∥ `golden-diff`].
 
 | Job | What it checks |
 |---|---|
 | `static-analysis` | Ruff lint; LinkML schema lint (non-blocking) |
 | `build` | Full artifact generation; all output files non-empty; package builds |
-| `test-gates` | TD instance gate; W3C cross-check; HTML structure tests |
+| `test-gates` | TD instance gate; W3C cross-check; HTML structure tests; generated spec HTML vs manual golden; assertion inventory vs upstream |
 | `golden-diff` | Generated JSON Schema + context vs committed snapshots |
+
+`upstream-sync-check.yaml` runs on its own, every Monday and on demand. It
+checks that the files listed in `resources/upstream-copies.txt` are still
+identical to their upstream version.
 
 ## Language Style
 
