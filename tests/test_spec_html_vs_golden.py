@@ -1,17 +1,11 @@
 """Compare the generated spec HTML against the manual golden HTML.
 
-Scope: the four sections that the pipeline generates. resources/index.template.html
-holds exactly four "%s" placeholders and each one sits inside one of these
-sections, so their whole content comes from the LinkML schema. Other sections
-are written by hand in the template and pass through unchanged. sec-default-values
-for example has the same one table with 19 rows before and after generation, so
-comparing it would not say anything about the generator.
-
-The golden file tests/manual_goldens/html/index.html is the hand-verified
-reference; any difference inside the four sections is an error.
-
-Every test first walks through everything in its scope and collects all
-differences, then fails once with the complete list.
+Scope: the four sections the pipeline generates. resources/index.template.html
+holds exactly four "%s" placeholders and each one sits inside one of these, so
+their content comes from the LinkML schema. The other sections are hand-written
+in the template and pass through unchanged. The golden file
+tests/manual_goldens/html/index.html is the hand-verified reference, any
+difference inside the four sections is an error.
 """
 from __future__ import annotations
 

@@ -1,23 +1,10 @@
-# Files copied from w3c/wot-thing-description. They must stay identical to the
-# upstream version on main. The weekly workflow compares them and fails if one
-# of them differs, then we sync it by hand.
+# Files copied or adapted from w3c/wot-thing-description. The weekly workflow
+# compares them with the upstream version on main and reports the ones that
+# differ. The manual golden is adapted, so it is expected to show up there.
 #
 # Format: <local path> <upstream path>
 
 resources/ground-truth-schemas/td20-json-schema-validation.json validation/td-json-schema-validation.json
-resources/upstream/extra-asserts.html testing/inputs/extra-asserts.html
 resources/upstream/assertions.csv testing/assertions.csv
-
-# Not listed, and why:
-# - resources/ground-truth-schemas/td11-json-schema-validation.json is frozen
-#   at the REC1.1 tag, it must not follow upstream main.
-# - resources/ground-truth-schemas/td-json-schema-validation.json and
-#   tm-json-schema-validation.json are hand-modified copies used by the snippet
-#   validation in src/wotis/generators/respec.py. Both differ from upstream in
-#   one place only: definitions/thing-context drops the anyOf wrapper and keeps
-#   the array branch, so @context must be an array and a single URI string is
-#   rejected. The tm file also comes from an older upstream version, its
-#   "version" says 1.1-09-November-2023 while upstream main says
-#   1.1-12-March-2025.
-# - resources/index.template.html and tests/manual_goldens/html/index.html are
-#   hand-adapted from the upstream index.html, so they can never be equal to it.
+resources/upstream/extra-asserts.html testing/inputs/extra-asserts.html
+tests/manual_goldens/html/index.html index.html

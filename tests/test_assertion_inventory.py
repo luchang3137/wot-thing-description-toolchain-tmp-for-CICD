@@ -1,17 +1,10 @@
 """Compare our assertion inventory with the upstream one.
 
-Upstream (w3c/wot-thing-description) builds testing/assertions.csv from two
-files: index.html and testing/inputs/extra-asserts.html. We do the same in
-html_assertions_to_csv (src/wotis/specgen/assertions.py) and we feed it a copy
-of the upstream extra-asserts.html, so both inventories are built the same way.
-
-That our CSV matches our own HTML is already checked during generation by
-validate_html_assertion_inventory, which stops the run when they disagree. What
-is left is the comparison with upstream, and that is what this file does.
-
-This test only reports, it does not fail on a difference. Our spec is TD 2.0
-and the upstream one is TD 1.1, so some assertions are expected to differ. The
-numbers go out as a warning so they stay visible in the test output.
+Upstream (w3c/wot-thing-description) builds testing/assertions.csv from
+index.html and testing/inputs/extra-asserts.html. We do the same and we feed it
+a copy of the upstream extra-asserts.html, so both inventories are built the
+same way. This test only reports, it does not fail on a difference: our spec is
+TD 2.0 and the upstream one is TD 1.1, so some assertions differ on purpose.
 """
 from __future__ import annotations
 

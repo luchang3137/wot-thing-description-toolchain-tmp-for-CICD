@@ -44,7 +44,7 @@ def main() -> int:
         print("all copied files are identical to upstream")
         return 0
 
-    print(f"{len(findings)} file(s) need a sync:")
+    print(f"{len(findings)} file(s) differ from upstream:")
     for finding in findings:
         print(f"- {finding}")
     return 1

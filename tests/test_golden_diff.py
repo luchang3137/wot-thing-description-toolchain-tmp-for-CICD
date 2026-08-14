@@ -1,12 +1,9 @@
 """Golden diff: the generated artifacts must match the committed snapshots
-under tests/goldens/. If a change is intended, update the snapshots with:
+under tests/goldens/. A snapshot is our own last output, so this says whether
+the output changed without us noticing, not whether it is correct. If a change
+is intended, update the snapshots with:
 
     uv run pytest tests/test_golden_diff.py --update-goldens
-
-This answers a different question than test_spec_html_vs_golden.py. There the
-generated spec HTML is compared with the hand-verified manual golden, which
-says whether the output is correct. Here it is compared with a snapshot of our
-own last output, which says whether it changed without us noticing.
 """
 from __future__ import annotations
 

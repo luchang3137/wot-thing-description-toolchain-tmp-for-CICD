@@ -1,18 +1,10 @@
 """Helpers to compare the generated spec HTML with the manual golden HTML.
 
-Both files are ReSpec source documents, but they are serialized differently
-(the golden is pretty-printed, the generated file is compact), so a plain text
-diff only reports formatting noise. The comparison here works on the parsed DOM
-instead:
-
-- sections are matched by section id, tables by caption text, table rows by
-  their ``tr`` id (or by the first cell text when the table has no row ids), so
-  an error message can name the exact term and column
-- a table cell is compared as plain text with all whitespace collapsed. Inline
-  markup is not compared. Both files leave many links unresolved for ReSpec
-  (``<a>Array</a>`` in the golden, ``<a href="#dfn-array">Array</a>`` in the
-  generated file), so a markup level comparison reports mostly the same few
-  systematic differences over and over.
+Both files are ReSpec sources but serialized differently, so a plain text diff
+only reports formatting noise. The comparison works on the parsed DOM instead:
+sections by id, tables by caption, rows by their ``tr`` id. A table cell is
+compared as plain text with whitespace collapsed, inline markup is not compared
+because both files leave many links unresolved for ReSpec.
 """
 from __future__ import annotations
 
