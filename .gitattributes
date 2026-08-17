@@ -1,6 +1,1 @@
 *.html linguist-detectable=false
-
-# The files listed in resources/upstream-copies.txt are compared with upstream
-# byte by byte, so git must not touch their line endings on checkout.
-resources/upstream/** -text
-resources/ground-truth-schemas/td20-json-schema-validation.json -text

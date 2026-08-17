@@ -135,7 +135,7 @@ Known pre-existing failures on `main` as of 2026-07 — do not investigate, do n
 | Test | Failure | Root cause |
 |---|---|---|
 | `test_golden_form_structure.py` — 21 failures | `Form section not found` in generated HTML | `Form` class subsections not emitted correctly by HTML generator; added by PR #58 as a regression baseline |
-| `test_spec_html_vs_golden.py` — 4 failures | 79 differences in the four generated sections | Part real (slot description, type and mandatory/optional differ from the golden), part markup only (`[[RFC2046]]` vs `[RFC2046]`, the golden is older than the generator). The step is commented out in `main.yaml` until this is fixed |
+| `test_spec_html_vs_golden.py` — 4 failures | 79 differences in the four generated sections | 26 of them are real: slot description, type and mandatory/optional differ from the golden. The rest is markup and punctuation, the golden keeps the ReSpec source form (`` `Form` ``, `[[RFC2046]]`) and we emit the tags. The step is commented out in `main.yaml` until this is fixed |
 
 These failures exist in CI on `main`. A PR that does not touch the Form class or HTML generation must not introduce new failures in this file.
 
@@ -219,10 +219,6 @@ When reviewing HTML changes, do not evaluate the entire document — scope the c
 | `build` | Full artifact generation; all output files non-empty; package builds |
 | `test-gates` | TD instance gate; W3C cross-check; HTML structure tests; assertion inventory vs upstream |
 | `golden-diff` | Generated JSON Schema + context + the four generated spec sections vs committed snapshots |
-
-`upstream-sync-check.yaml` runs on its own, every Monday and on demand. It
-checks that the files listed in `resources/upstream-copies.txt` are still
-identical to their upstream version.
 
 ## Language Style
 

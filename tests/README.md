@@ -47,9 +47,7 @@ The following exist only because the reference files live in another
 repository. After a merge into `w3c/wot-thing-description` the repository is
 its own reference, so they lose their meaning:
 
-- `.github/workflows/upstream-sync-check.yaml`,
-  `.github/scripts/check_upstream_sources.py`,
-  `resources/upstream-copies.txt`, `resources/upstream/`
+- `resources/upstream/`
 - `test_assertion_inventory.py` — the upstream assertions.csv would then be the
   file we generate ourselves
 - `test_spec_html_vs_golden.py` and `manual_goldens/` — the golden is a
