@@ -15,9 +15,6 @@ dependencies = [
     "mkdocs-material>=9.7.6",
     "schemasheets>=0.1.10",
     "jsonschema>=4.21.1",
-    "rich>=13.7.0",
-    "pyld>=3.0.0",
-    "colorama>=0.4.6",
     "lxml>=6.1.0",
     "cssselect>=1.4.0",
     "bikeshed>=7.0.11",
@@ -36,3 +33,21 @@ root = "src"
 
 [project.scripts]
 wotis = "src.wotis.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# Real errors only (syntax + undefined names) for now; tighten over time.
+select = ["E9", "F63", "F7", "F82"]
