@@ -14,7 +14,7 @@ uv run pytest tests/ -v
 | `test_td_instance_gate.py` | Does the generated JSON Schema accept every valid sample in `data/` and reject every invalid one? |
 | `test_td_crosscheck.py` | Does the generated JSON Schema give the same verdict as the W3C schemas in `resources/ground-truth-schemas/`? |
 | `test_golden_diff.py` | Did the generated JSON Schema, JSON-LD context or the four generated spec sections change without us noticing? Compares with the snapshots in `goldens/`. |
-| `test_spec_html_vs_golden.py` | Does the generated spec HTML match `manual_goldens/html/index.html` inside the four sections the pipeline generates? Fails today, so it is not run in CI. |
+| `test_spec_html_vs_golden.py` | Does the generated spec HTML match `manual_goldens/html/index.html` inside the four sections the pipeline generates? Fails today, so it is not run in CI. Also holds two integrity checks on the generated file alone (unique ids, resolvable in-page links). |
 | `test_assertion_inventory.py` | Does our assertion id set match the upstream one in `resources/upstream/assertions.csv`? Reports only, never fails. |
 | `test_golden_form_structure.py` | Does the Form section of the generated HTML have the expected structure? |
 | `test_spec_content_rendering.py` | Do the HTML rendering functions produce the expected markup? Uses fake input, does not read generated files. |

@@ -6,10 +6,15 @@ their content comes from the LinkML schema. The other sections are hand-written
 in the template and pass through unchanged. The golden file
 tests/manual_goldens/html/index.html is the hand-verified reference, any
 difference inside the four sections is an error.
+
+The two integrity tests at the end check the generated file on its own and
+do not need the golden.
 """
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
+from urllib.parse import unquote
 
 import pytest
 
@@ -133,3 +138,34 @@ def test_assertion_spans_match(golden_tree, generated_tree, spec_html_findings) 
                 f"    generated: {generated_assertions[assertion_id]}"
             )
     _fail_on_findings(spec_html_findings, findings)
+
+
+# The two tests below need no golden, they check the generated file on its
+# own. They keep the checks the removed tests/validators/html_validator.py had
+# and the golden comparison above does not: duplicate ids and broken links.
+
+# These ids do not exist in the ReSpec source, ReSpec creates them at render
+RENDER_TIME_ID_PREFIXES = ("bib-", "dfn-")
+RENDER_TIME_IDS = {"class-definitions", "namespaces"}
+
+
+def test_ids_are_unique(generated_tree) -> None:
+    ids = [el.get("id") for el in generated_tree.cssselect("[id]") if el.get("id")]
+    duplicated = sorted(value for value, count in Counter(ids).items() if count > 1)
+    assert not duplicated, f"duplicate ids in the generated file: {', '.join(duplicated)}"
+
+
+def test_internal_links_resolve(generated_tree) -> None:
+    defined_ids = {el.get("id") for el in generated_tree.cssselect("[id]")}
+    broken = set()
+    for link in generated_tree.cssselect('a[href^="#"]'):
+        target = unquote((link.get("href") or "")[1:])
+        if not target or target in defined_ids:
+            continue
+        if target.startswith(RENDER_TIME_ID_PREFIXES) or target in RENDER_TIME_IDS:
+            continue
+        broken.add(target)
+    assert not broken, (
+        f"{len(broken)} link target(s) missing in the generated file: "
+        + ", ".join(sorted(broken))
+    )
