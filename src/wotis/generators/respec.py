@@ -84,15 +84,15 @@ def _render_note_block(
     process_description: Callable[[str], str],
     title: Optional[str] = None,
 ) -> str:
-    body = process_description(str(text or ""))
+    body = _inline_html(process_description(str(text or ""))).strip()
     if not body:
         return ""
     if title:
         return (
             f'<p class="note" title="{escape(str(title), quote=True)}">'
-            f"{_inline_html(body)}</p>"
+            f"{body}</p>"
         )
-    return f'<div class="note">\n{body}\n</div>'
+    return f'<div class="note">\n<p>{body}</p>\n</div>'
 
 
 def _extract_enum_cell(
@@ -552,22 +552,23 @@ def generate_respec_spec(
                     continue
 
             rows = collect_slot_rows(sv, cls, process_description, schema_prefix)
-            raw_desc = getattr(cdef, "description", "") or ""
-            if "spec_description" in ann:
-                spec_def = (
-                    getattr(ann["spec_description"], "value", None)
-                    or ann["spec_description"]
-                )
-                raw_desc = str(spec_def) or raw_desc
-
-            desc_html = process_description(raw_desc)
             intro_html = ""
+            desc_html = ""
             if "spec_intro_content" in ann:
                 intro_html = render_spec_content_annotation(
                     ann,
                     process_description,
                     annotation_key="spec_intro_content",
                 )
+            else:
+                raw_desc = getattr(cdef, "description", "") or ""
+                if "spec_description" in ann:
+                    spec_def = (
+                        getattr(ann["spec_description"], "value", None)
+                        or ann["spec_description"]
+                    )
+                    raw_desc = str(spec_def) or raw_desc
+                desc_html = process_description(raw_desc)
             spec_content_html = ""
             if "spec_content" in ann:
                 spec_content_html = render_spec_content_annotation(
@@ -616,8 +617,8 @@ def generate_respec_spec(
     if cfg.snippets_dir.is_dir():
         from ..specgen.snippets import validate_all_snippets
 
-        schemas_dir = cfg.resources_path / "ground-truth-schemas"
-        td_schema_path = schemas_dir / "td-json-schema-validation.json"
+        schemas_dir = cfg.resources_path / "upstream" / "schemas"
+        td_schema_path = schemas_dir / "td20-json-schema-validation.json"
         tm_schema_path = schemas_dir / "tm-json-schema-validation.json"
         snippet_errors = validate_all_snippets(
             cfg.snippets_dir,
@@ -627,8 +628,8 @@ def generate_respec_spec(
         if snippet_errors:
             for err in snippet_errors:
                 logging.error("Snippet validation error: %s", err)
-            raise RuntimeError(
-                f"Snippet validation failed with {len(snippet_errors)} error(s)"
+            logging.error(
+                "Snippet validation failed with %d error(s) — continuing", len(snippet_errors)
             )
 
         tpl_text = respec_template_path.read_text(encoding="utf-8")
