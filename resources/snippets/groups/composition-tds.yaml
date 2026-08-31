@@ -1,9 +1,0 @@
-title: Thing Descriptions of the Smart Ventilator
-tabs:
-  - snippet: smart-ventilator-td
-    label: Top level Smart Ventilator TD
-    selected: true
-  - snippet: ventilation-td
-    label: Ventilation TD
-  - snippet: led-td
-    label: LED TD

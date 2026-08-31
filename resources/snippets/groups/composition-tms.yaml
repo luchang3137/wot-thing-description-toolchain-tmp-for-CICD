@@ -1,9 +1,0 @@
-title: Top level/parent Smart Ventilator Thing Model
-tabs:
-  - snippet: smart-ventilator-tm
-    label: Smart Ventilator TM
-    selected: true
-  - snippet: ventilation-tm
-    label: Ventilation TM
-  - snippet: led-tm
-    label: LED TM
