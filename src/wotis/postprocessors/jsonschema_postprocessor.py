@@ -317,6 +317,16 @@ def _resolve_refs(schema: dict, sv: SchemaView) -> None:
                 return ref[len(prefix):]
         return None
 
+    def _is_string_map(cls_name: str | None) -> bool:
+        if cls_name is None:
+            return False
+        try:
+            slots = sv.class_induced_slots(cls_name)
+        except Exception:
+            return False
+        non_id = [s for s in slots if not getattr(s, 'identifier', False)]
+        return len(slots) == 2 and len(non_id) == 1 and non_id[0].range == 'string'
+
     def _fix_additional_props_anyof(obj: dict) -> None:
         if 'additionalProperties' not in obj:
             return
@@ -329,7 +339,11 @@ def _resolve_refs(schema: dict, sv: SchemaView) -> None:
 
         for item in items:
             if isinstance(item, dict) and '$ref' in item and '__identifier_optional' in item['$ref']:
-                obj['additionalProperties'] = {'$ref': item['$ref'].replace('__identifier_optional', '')}
+                base = item['$ref'].replace('__identifier_optional', '')
+                if _is_string_map(_extract_ref_name(base)):
+                    obj['additionalProperties'] = {'type': 'string'}
+                else:
+                    obj['additionalProperties'] = {'$ref': base}
                 return
 
         refs = [i for i in items if isinstance(i, dict) and '$ref' in i]

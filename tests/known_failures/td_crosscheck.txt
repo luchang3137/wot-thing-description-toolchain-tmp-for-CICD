@@ -6,9 +6,5 @@
 # Marked xfail(strict): when a divergence is fixed, remove its line here.
 #
 # Baseline: the generated schema rejects every valid TD that the W3C schema accepts.
-td11/11-multilanguage/multilanguage-td-valid.jsonld
-td11/11-multilanguage/multilanguage-title-description-td-valid.jsonld
 td11/5-protocols/CoAP-observing-resources-td-valid.jsonld
-td20/11-multilanguage/multilanguage-td-valid.jsonld
-td20/11-multilanguage/multilanguage-title-description-td-valid.jsonld
 td20/5-protocols/CoAP-observing-resources-td-valid.jsonld
