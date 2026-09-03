@@ -8,7 +8,5 @@
 # its line must be removed from this list. Only valid samples belong here.
 #
 # Baseline: 65/65 valid rejected for each version, 8/8 invalid correctly rejected.
-td11/3-actions/actions-forms-td-valid.jsonld
 td11/5-protocols/CoAP-observing-resources-td-valid.jsonld
-td20/3-actions/actions-forms-td-valid.jsonld
 td20/5-protocols/CoAP-observing-resources-td-valid.jsonld
