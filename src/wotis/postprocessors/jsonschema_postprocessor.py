@@ -167,7 +167,9 @@ def _build_oneof_dispatch(schema: dict, sv: SchemaView, config: TransformConfig)
         if dispatch.include_unknown:
             one_of_list.append({
                 "type": "object",
-                "description": f"Additional {cls_name} not covered by known subclasses"
+                "description": f"Additional {cls_name} not covered by known subclasses",
+                "properties": {dispatch.discriminator: {"type": "string", "pattern": ".+:.*"}},
+                "required": [dispatch.discriminator],
             })
 
         defs[cls_name] = {"oneOf": one_of_list}
@@ -216,7 +218,9 @@ def _build_form_variants(schema: dict, config: TransformConfig) -> None:
             variant_refs.append({"$ref": f"#/$defs/{variant_def_name}"})
 
         defs[cls_name] = {
-            "oneOf": variant_refs + [{"$ref": f"#/$defs/{base_name}"}]
+            "oneOf": variant_refs + [
+                {"$ref": f"#/$defs/{base_name}", "not": {"required": [fv.op_slot]}}
+            ]
         }
 
         thing_props = schema.get('properties', {})
