@@ -464,8 +464,7 @@
     },
     "td": "https://www.w3.org/2019/wot/td#",
     "title": {
-      "@id": "title",
-      "@type": "@id"
+      "@id": "title"
     },
     "titles": {
       "@id": "titleInLanguage",
