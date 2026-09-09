@@ -8,6 +8,7 @@ because both files leave many links unresolved for ReSpec.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import lxml.etree
@@ -44,7 +45,9 @@ def generated_sections_html(path: Path) -> str:
         parts.append(lxml.etree.tostring(section, pretty_print=True, encoding="unicode"))
     # The template contains carriage returns and lxml writes them out as &#13;,
     # which only makes the snapshot diff harder to read.
-    return "".join(parts).replace("&#13;", "")
+    html = "".join(parts).replace("&#13;", "")
+    # bikeshed numbers repeated link ids (x, x①, x②, ...) and one change renumbers all later ones
+    return re.sub(r'(id="[^"]*?)[\u2460-\u24ff]+"', r'\1"', html)
 
 
 def normalize_text(text: str | None) -> str:
