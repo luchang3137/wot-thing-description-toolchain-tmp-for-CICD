@@ -164,6 +164,7 @@ def _build_oneof_dispatch(schema: dict, sv: SchemaView, config: TransformConfig)
 
         one_of_list = sorted(subclass_refs, key=lambda x: x["$ref"])
 
+        # W3C additionalSecurityScheme: a prefixed scheme, so the catch-all does not overlap the known schemes (KNOWN_LINKML_GAPS.md #9).
         if dispatch.include_unknown:
             one_of_list.append({
                 "type": "object",
@@ -217,6 +218,7 @@ def _build_form_variants(schema: dict, config: TransformConfig) -> None:
             defs[variant_def_name] = variant_def
             variant_refs.append({"$ref": f"#/$defs/{variant_def_name}"})
 
+        # The base branch takes only forms without op, otherwise a form with op also matches a variant and oneOf fails (KNOWN_LINKML_GAPS.md #10).
         defs[cls_name] = {
             "oneOf": variant_refs + [
                 {"$ref": f"#/$defs/{base_name}", "not": {"required": [fv.op_slot]}}
@@ -340,6 +342,7 @@ def _resolve_refs(schema: dict, sv: SchemaView) -> None:
         for item in items:
             if isinstance(item, dict) and '$ref' in item and '__identifier_optional' in item['$ref']:
                 base = item['$ref'].replace('__identifier_optional', '')
+                # W3C titles/descriptions are string maps, LinkML also emits the object form, keep only the string form (KNOWN_LINKML_GAPS.md #11).
                 if _is_string_map(_extract_ref_name(base)):
                     obj['additionalProperties'] = {'type': 'string'}
                 else:
